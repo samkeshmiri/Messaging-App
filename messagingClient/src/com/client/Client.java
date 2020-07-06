@@ -62,7 +62,7 @@ public class Client extends JFrame {
 	}
 
 	private void closeEverything() {
-		showMessage("\nClosing connection...");
+		showMessage("\n Closing connection...");
 		ableToType(false);
 		try {
 			output.close();
@@ -78,7 +78,7 @@ public class Client extends JFrame {
 		output.flush(); // bytes get left in buffer, data get left when sending, so this pushes the rest
 						// through
 		input = new ObjectInputStream(connection.getInputStream()); // create pathway to receive messages
-		showMessage("\nStreams are now setup. \n");
+		showMessage("\n Streams are now setup. \n");
 	}
 	
 	private void whileChatting() throws IOException {
@@ -103,7 +103,7 @@ public class Client extends JFrame {
 		try {
 			output.writeObject("CLIENT: " + message);
 			output.flush(); // not really necessary but good to ensure it's fully sent
-			showMessage("\nCLIENT: " + message);
+			showMessage("\n CLIENT: " + message);
 		} catch (IOException ioException) {
 			chatWindow.append("\n Unable to send message");
 		}
