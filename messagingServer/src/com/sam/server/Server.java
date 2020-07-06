@@ -97,7 +97,7 @@ public class Server extends JFrame {
 	}
 
 	private void closeEverything() {
-		showMessage("\n Closing connection...");
+		showMessage("/n Closing connection...");
 		ableToType(false);
 		try {
 			output.close();
