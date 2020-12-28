@@ -40,6 +40,7 @@ public class Client extends JFrame {
 		});
 		add(userText, BorderLayout.NORTH);
 		chatWindow = new JTextArea();
+		chatWindow.setEditable(false);
 		add(new JScrollPane(chatWindow), BorderLayout.CENTER);
 		setSize(350, 150);
 		setVisible(true);
@@ -119,11 +120,8 @@ public class Client extends JFrame {
 	}
 
 	private void showMessage(final String text) {
-		SwingUtilities.invokeLater( // thread that updates the GUI
-				new Runnable() { // create thread
-					public void run() {
-						chatWindow.append(text);
-					}
-				});
+		SwingUtilities.invokeLater(() -> {
+			chatWindow.append(text);
+		});
 	}
 }
