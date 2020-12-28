@@ -1,9 +1,25 @@
 apply plugin: 'java'
 
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  testCompile 'junit:junit:4.12'
+  compile 'junit:junit:4.12'
+}
+
 sourceSets {
   main {
     java {
       srcDir 'src'
+    }
+  }
+
+  test {
+    java {
+      srcDir 'test'
     }
   }
 }
@@ -15,4 +31,9 @@ jar {
       'Main-Class': 'com.client.Main'
     )
   }
+}
+
+test {
+  useJUnit()
+  maxHeapSize = '1G'
 }
