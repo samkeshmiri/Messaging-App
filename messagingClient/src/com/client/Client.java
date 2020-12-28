@@ -46,6 +46,9 @@ public class Client extends JFrame {
 		setVisible(true);
 	}
 
+	public JTextArea getChatWindow() {
+		return chatWindow;
+	}
 
 	// connect to server
 	public void startRunning() {
