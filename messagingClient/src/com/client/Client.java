@@ -15,6 +15,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 
 public class Client extends JFrame {
 	private JTextField userText;
@@ -44,6 +45,7 @@ public class Client extends JFrame {
 		add(new JScrollPane(chatWindow), BorderLayout.CENTER);
 		setSize(350, 150);
 		setVisible(true);
+		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 	}
 
 	public JTextArea getChatWindow() {
@@ -124,7 +126,7 @@ public class Client extends JFrame {
 
 	private void showMessage(final String text) {
 		SwingUtilities.invokeLater(() -> {
-			chatWindow.append(text);
+			chatWindow.append(text + '\n');
 		});
 	}
 }
