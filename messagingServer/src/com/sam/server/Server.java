@@ -7,6 +7,7 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import com.sam.server.EchoThread;
 
 public class Server {
 	private ObjectOutputStream output;
@@ -24,19 +25,20 @@ public class Server {
 
 			while (true) {
 				try {
-					socket = serverSocket.accept();
+					Socket socket = server.accept();
 
 					// keep track of our connections in the pool
 					connectionPool.add(socket);
 
 					// prune our connection pool after each connection
 					pruneConnectionPool();
+
+					// delegate the new thread to the client
+					(new EchoThread(socket)).start();
+
 				} catch (IOException e) {
 					System.out.println("I/O error: " + e);
 				}
-
-				// delegate the new thread to the client
-				(new EchoThread(socket)).start();
 			}
 		} catch (IOException ioException) {
 			ioException.printStackTrace();
