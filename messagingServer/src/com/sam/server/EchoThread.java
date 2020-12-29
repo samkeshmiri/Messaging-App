@@ -32,10 +32,10 @@ public class EchoThread extends Thread {
 
         String line;
 
-        while (true) {
+        while (socket.isConnected()) {
             try {
                 line = brinp.readLine();
-                if ((line == null) || line.equalsIgnoreCase("QUIT")) {
+                if (line.equalsIgnoreCase("QUIT")) {
                     socket.close();
                     return;
                 } else {
@@ -45,7 +45,6 @@ public class EchoThread extends Thread {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                return;
             }
         }
     }
