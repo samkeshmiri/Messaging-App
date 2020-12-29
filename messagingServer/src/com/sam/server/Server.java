@@ -28,6 +28,9 @@ public class Server {
 
 					// keep track of our connections in the pool
 					connectionPool.add(socket);
+
+					// prune our connection pool after each connection
+					pruneConnectionPool();
 				} catch (IOException e) {
 					System.out.println("I/O error: " + e);
 				}
@@ -37,6 +40,16 @@ public class Server {
 			}
 		} catch (IOException ioException) {
 			ioException.printStackTrace();
+		}
+	}
+
+	// dispose of any connections that are disconnected
+	// to free up memory
+	public void pruneConnectionPool() {
+		for (int i = 0; i < connectionPool.size(); i++) {
+			if (!connectionPool.get(i).isConnected()) {
+				connectionPool.remove(i);
+			}
 		}
 	}
 }
