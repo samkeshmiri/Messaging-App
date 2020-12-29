@@ -1,7 +1,7 @@
 package com.sam.server;
 
 import java.io.IOException;
-import java.io.DataOutputStream;
+import java.io.ObjectOutputStream;
 import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -17,15 +17,16 @@ public class EchoThread extends Thread {
     public void run() {
         InputStream inp = null;
         BufferedReader brinp = null;
-        DataOutputStream out = null;
+        ObjectOutputStream out = null;
 
         try {
+            // we need an output stream to echo back what they said
+            out = new ObjectOutputStream(socket.getOutputStream());
+            out.flush();
+
             inp = socket.getInputStream();
             // create a buffered reader for its utility methods and wrap it arounf our input stream
             brinp = new BufferedReader(new InputStreamReader(inp));
-
-            // we need an output stream to echo back what they said
-            out = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e) {
             return;
         }
