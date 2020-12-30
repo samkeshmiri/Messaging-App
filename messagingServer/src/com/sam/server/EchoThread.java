@@ -60,6 +60,7 @@ public class EchoThread extends Thread {
             return;
         }
 
+        System.out.println(this.identifier + " has connected");
         String line;
 
         while (socket.isConnected()) {
@@ -68,7 +69,7 @@ public class EchoThread extends Thread {
                 String message = buildMessage(line);
                 sendMessage(message);
             } catch (Exception e) { // TODO better handling
-                e.printStackTrace();
+                System.out.println(this.identifier + " has disconnected");
                 return;
             }
         }

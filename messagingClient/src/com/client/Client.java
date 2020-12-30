@@ -17,6 +17,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.JOptionPane;
+import java.awt.Color;
 
 public class Client extends JFrame {
 	private JTextField userText;
@@ -43,11 +44,14 @@ public class Client extends JFrame {
 
 		add(userText, BorderLayout.NORTH);
 		chatWindow = new JTextArea();
+		chatWindow.setBackground(Color.BLACK);
+		chatWindow.setForeground(Color.GREEN);
 		chatWindow.setEditable(false);
 		add(new JScrollPane(chatWindow), BorderLayout.CENTER);
-		setSize(350, 150);
+		setSize(400, 400);
 		setVisible(true);
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		setLocationRelativeTo(null);
 	}
 
 	public JTextArea getChatWindow() {
