@@ -67,9 +67,9 @@ public class EchoThread extends Thread {
                 line = (String) inp.readObject();
                 String message = buildMessage(line);
                 sendMessage(message);
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
+            } catch (Exception e) { // TODO better handling
                 e.printStackTrace();
+                return;
             }
         }
     }

@@ -16,6 +16,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
+import javax.swing.JOptionPane;
 
 public class Client extends JFrame {
 	private JTextField userText;
@@ -58,6 +59,7 @@ public class Client extends JFrame {
 		try {
 			connectToServer();
 			setUpStreams();
+			setupUser();
 			whileChatting();
 		} catch (EOFException eoxException) {
 			showMessage("Client terminated connection");
@@ -75,6 +77,22 @@ public class Client extends JFrame {
 			output.close();
 			input.close();
 			connection.close();
+		} catch (IOException ioException) {
+			ioException.printStackTrace();
+		}
+	}
+
+	private void setupUser() {
+		try {
+			// TODO check if username is taken
+			String username = (String) JOptionPane.showInputDialog("Type in a username:");
+			if (username == null || username.length() < 1) {
+				setupUser();
+				return;
+			}
+
+			output.writeObject(username);
+			output.flush();
 		} catch (IOException ioException) {
 			ioException.printStackTrace();
 		}
