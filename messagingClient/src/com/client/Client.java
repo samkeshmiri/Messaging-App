@@ -31,14 +31,15 @@ public class Client extends JFrame {
 		serverIP = host;
 		userText = new JTextField();
 		userText.setEditable(false);
-		userText.addActionListener(new ActionListener() {
 
+		userText.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				sendMessage(e.getActionCommand());
 				userText.setText("");
 			}
 		});
+
 		add(userText, BorderLayout.NORTH);
 		chatWindow = new JTextArea();
 		chatWindow.setEditable(false);
@@ -107,9 +108,8 @@ public class Client extends JFrame {
 
 	protected void sendMessage(String message) {
 		try {
-			output.writeObject("CLIENT: " + message);
+			output.writeObject(message);
 			output.flush(); // not really necessary but good to ensure it's fully sent
-			showMessage("CLIENT: " + message);
 		} catch (IOException ioException) {
 			chatWindow.append("Unable to send message");
 		}

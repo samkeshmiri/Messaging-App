@@ -10,31 +10,34 @@ import java.util.ArrayList;
 import com.sam.server.EchoThread;
 
 public class Server {
+	public final int PORT = 6789;
 	private ObjectOutputStream output;
 	private ObjectInputStream input;
 	private ServerSocket server; // listens for incoming requests
-	private ArrayList<Socket> connectionPool; // connection between computers
+	private ArrayList<EchoThread> connectionPool; // threads containers of connections
 
 	public Server() {
-		connectionPool = new ArrayList<Socket>();
+		connectionPool = new ArrayList<EchoThread>();
 	}
 
 	public void run() {
 		try {
-			server = new ServerSocket(6789, 100);
+			server = new ServerSocket(PORT, 100);
+			System.out.println("Server running on port " + PORT + "...");
 
 			while (true) {
 				try {
 					Socket socket = server.accept();
 
-					// keep track of our connections in the pool
-					connectionPool.add(socket);
+					// delegate the new thread to the client
+					EchoThread thread = new EchoThread(socket);
+
+					// keep track of our multithreaded connections in the pool
+					connectionPool.add(thread);
+					thread.start();
 
 					// prune our connection pool after each connection
 					pruneConnectionPool();
-
-					// delegate the new thread to the client
-					(new EchoThread(socket)).start();
 
 				} catch (IOException e) {
 					System.out.println("I/O error: " + e);
@@ -45,11 +48,12 @@ public class Server {
 		}
 	}
 
-	// dispose of any connections that are disconnected
+	// dispose of any resources that are disconnected
 	// to free up memory
 	public void pruneConnectionPool() {
 		for (int i = 0; i < connectionPool.size(); i++) {
-			if (!connectionPool.get(i).isConnected()) {
+			Socket socket = connectionPool.get(i).getSocket();
+			if (!socket.isConnected()) {
 				connectionPool.remove(i);
 			}
 		}
