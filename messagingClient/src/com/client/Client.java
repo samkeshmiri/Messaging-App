@@ -59,7 +59,7 @@ public class Client extends JFrame {
 			setUpStreams();
 			whileChatting();
 		} catch (EOFException eoxException) {
-			showMessage("\n Client terminated connection");
+			showMessage("Client terminated connection");
 		} catch (IOException ioException) {
 			ioException.printStackTrace();
 		} finally {
@@ -68,7 +68,7 @@ public class Client extends JFrame {
 	}
 
 	private void closeEverything() {
-		showMessage("\nClosing connection...");
+		showMessage("Closing connection...");
 		ableToType(false);
 		try {
 			output.close();
@@ -84,7 +84,7 @@ public class Client extends JFrame {
 		output.flush(); // bytes get left in buffer, data get left when sending, so this pushes the rest
 						// through
 		input = new ObjectInputStream(connection.getInputStream()); // create pathway to receive messages
-		showMessage("\nStreams are now setup. \n");
+		showMessage("Streams are now setup.");
 	}
 	
 	private void whileChatting() throws IOException {
@@ -92,9 +92,9 @@ public class Client extends JFrame {
 		do {
 			try {
 				message = (String) input.readObject();
-				showMessage("\n" + message);
+				showMessage(message);
 			} catch (ClassNotFoundException classNotFoundException) {
-				showMessage("\nCannot send message");
+				showMessage("Cannot send message");
 			}
 		} while (!message.equals("CLIENT: QUIT")); // TODO: change this to accept lower case
 	}
@@ -109,9 +109,9 @@ public class Client extends JFrame {
 		try {
 			output.writeObject("CLIENT: " + message);
 			output.flush(); // not really necessary but good to ensure it's fully sent
-			showMessage("\nCLIENT: " + message);
+			showMessage("CLIENT: " + message);
 		} catch (IOException ioException) {
-			chatWindow.append("\n Unable to send message");
+			chatWindow.append("Unable to send message");
 		}
 	}
 	
