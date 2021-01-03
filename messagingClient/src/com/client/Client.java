@@ -15,6 +15,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+import javax.swing.JOptionPane;
+import java.awt.Color;
 
 public class Client extends JFrame {
 	private JTextField userText;
@@ -30,30 +33,40 @@ public class Client extends JFrame {
 		serverIP = host;
 		userText = new JTextField();
 		userText.setEditable(false);
-		userText.addActionListener(new ActionListener() {
 
+		userText.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				sendMessage(e.getActionCommand());
 				userText.setText("");
 			}
 		});
+
 		add(userText, BorderLayout.NORTH);
 		chatWindow = new JTextArea();
+		chatWindow.setBackground(Color.BLACK);
+		chatWindow.setForeground(Color.GREEN);
+		chatWindow.setEditable(false);
 		add(new JScrollPane(chatWindow), BorderLayout.CENTER);
-		setSize(350, 150);
+		setSize(400, 400);
 		setVisible(true);
+		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		setLocationRelativeTo(null);
 	}
 
+	public JTextArea getChatWindow() {
+		return chatWindow;
+	}
 
 	// connect to server
 	public void startRunning() {
 		try {
 			connectToServer();
 			setUpStreams();
+			setupUser();
 			whileChatting();
 		} catch (EOFException eoxException) {
-			showMessage("\n Client terminated connection");
+			showMessage("Client terminated connection");
 		} catch (IOException ioException) {
 			ioException.printStackTrace();
 		} finally {
@@ -62,7 +75,7 @@ public class Client extends JFrame {
 	}
 
 	private void closeEverything() {
-		showMessage("\nClosing connection...");
+		showMessage("Closing connection...");
 		ableToType(false);
 		try {
 			output.close();
@@ -73,12 +86,28 @@ public class Client extends JFrame {
 		}
 	}
 
+	private void setupUser() {
+		try {
+			// TODO check if username is taken
+			String username = (String) JOptionPane.showInputDialog("Type in a username:");
+			if (username == null || username.length() < 1) {
+				setupUser();
+				return;
+			}
+
+			output.writeObject(username);
+			output.flush();
+		} catch (IOException ioException) {
+			ioException.printStackTrace();
+		}
+	}
+
 	private void setUpStreams() throws IOException {
 		output = new ObjectOutputStream(connection.getOutputStream()); // stream for client to server
 		output.flush(); // bytes get left in buffer, data get left when sending, so this pushes the rest
 						// through
 		input = new ObjectInputStream(connection.getInputStream()); // create pathway to receive messages
-		showMessage("\nStreams are now setup. \n");
+		showMessage("Streams are now setup.");
 	}
 	
 	private void whileChatting() throws IOException {
@@ -86,9 +115,9 @@ public class Client extends JFrame {
 		do {
 			try {
 				message = (String) input.readObject();
-				showMessage("\n" + message);
+				showMessage(message);
 			} catch (ClassNotFoundException classNotFoundException) {
-				showMessage("\nCannot send message");
+				showMessage("Cannot send message");
 			}
 		} while (!message.equals("CLIENT: QUIT")); // TODO: change this to accept lower case
 	}
@@ -101,11 +130,10 @@ public class Client extends JFrame {
 
 	protected void sendMessage(String message) {
 		try {
-			output.writeObject("CLIENT: " + message);
+			output.writeObject(message);
 			output.flush(); // not really necessary but good to ensure it's fully sent
-			showMessage("\nCLIENT: " + message);
 		} catch (IOException ioException) {
-			chatWindow.append("\n Unable to send message");
+			chatWindow.append("Unable to send message");
 		}
 	}
 	
@@ -119,11 +147,8 @@ public class Client extends JFrame {
 	}
 
 	private void showMessage(final String text) {
-		SwingUtilities.invokeLater( // thread that updates the GUI
-				new Runnable() { // create thread
-					public void run() {
-						chatWindow.append(text);
-					}
-				});
+		SwingUtilities.invokeLater(() -> {
+			chatWindow.append(text + '\n');
+		});
 	}
 }

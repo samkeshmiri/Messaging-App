@@ -1,62 +1,45 @@
 package com.sam.server;
 
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-
-public class Server extends JFrame {
-	private JTextField userText;
-	private JTextArea chatWindow;
+public class Server {
+	public final int PORT = 6789;
 	private ObjectOutputStream output;
 	private ObjectInputStream input;
 	private ServerSocket server; // listens for incoming requests
-	private Socket connection; // connection between computers
+	private ArrayList<EchoThread> connectionPool; // threads containers of connections
 
 	public Server() {
-		super("Instant Messenger");
-		userText = new JTextField();
-		userText.setEditable(false); // set to true once connected
-		userText.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent event) { // when user types in and hits enter, this is performed
-				sendMessage(event.getActionCommand());
-				userText.setText("");
-			}
-		});
-		add(userText, BorderLayout.NORTH);
-		chatWindow = new JTextArea();
-		add(new JScrollPane(chatWindow), BorderLayout.CENTER);
-		setSize(350, 150);
-		setVisible(true);
+		connectionPool = new ArrayList<EchoThread>();
 	}
 
-	public void startRunning() {
+	public void run() {
 		try {
-			server = new ServerSocket(6789, 100);
+			server = new ServerSocket(PORT, 100);
+			System.out.println("Server running on port " + PORT + "...");
+
 			while (true) {
 				try {
-					// wait for someone to connect
-					// connect and talk
-					setupConnection();
-					setupStreams();
-					whileChatting();
-				} catch (EOFException eofException) {
-					showMessage("\n Server ended the connection");
-				} finally {
-					closeEverything();
+					Socket socket = server.accept();
+
+					// delegate the new thread to the client
+					EchoThread thread = new EchoThread(socket);
+
+					// keep track of our multithreaded connections in the pool
+					connectionPool.add(thread);
+					thread.start();
+
+					// prune our connection pool after each connection
+					pruneConnectionPool();
+
+				} catch (IOException e) {
+					System.out.println("I/O error: " + e);
 				}
 			}
 		} catch (IOException ioException) {
@@ -64,76 +47,90 @@ public class Server extends JFrame {
 		}
 	}
 
-	/*
-	 * wait for connection then display connection information only creates a
-	 * socket/connection once it is connected
-	 */
-	private void setupConnection() throws IOException {
-		showMessage("waiting for connection... \n");
-		connection = server.accept(); // blocks connection until it is made
-		showMessage("Now connected to " + connection.getInetAddress().getHostName());
-	}
-
-	private void setupStreams() throws IOException {
-		output = new ObjectOutputStream(connection.getOutputStream()); // create pathway to connect to another computer
-		output.flush(); // bytes get left in buffer, data get left when sending, so this pushes the rest
-						// through
-		input = new ObjectInputStream(connection.getInputStream()); // create pathway to receive messages
-		showMessage("\n Streams are now setup \n");
-	}
-
-	private void whileChatting() throws IOException {
-		String message = "Connection established";
-		sendMessage(message);
-		ableToType(true);
-		do {
-			try {
-				message = (String) input.readObject();
-				showMessage("\n " + message);
-			} catch (ClassNotFoundException classNotFoundException) {
-				showMessage("\n User did not send a text message");
+	// dispose of any resources that are disconnected
+	// to free up memory
+	public void pruneConnectionPool() {
+		for (int i = 0; i < connectionPool.size(); i++) {
+			Socket socket = connectionPool.get(i).getSocket();
+			if (!socket.isConnected()) {
+				connectionPool.remove(i);
 			}
-		} while (!message.equals("CLIENT: QUIT")); // TODO: change this to accept lower case
-	}
-
-	private void closeEverything() {
-		showMessage("/n Closing connection...");
-		ableToType(false);
-		try {
-			output.close();
-			input.close();
-			connection.close();
-		} catch (IOException ioException) {
-			ioException.printStackTrace();
 		}
 	}
 
-	private void sendMessage(String message) {
-		try {
-			output.writeObject("SERVER: " + message);
-			output.flush(); // not really necessary but good to ensure it's fully sent
-			showMessage("\nSERVER: " + message);
-		} catch (IOException ioException) {
-			chatWindow.append("\n Unable to send message");
+	private class EchoThread extends Thread {
+		protected Socket socket;
+		protected String identifier;
+	
+		private ObjectInputStream inp = null;
+		private ObjectOutputStream out = null;
+	
+		public EchoThread(Socket clientSocket) {
+			this.socket = clientSocket;
+			inp = null;
+			out = null;
+	
+			try {
+				// we need an output stream to echo back what they said
+				out = new ObjectOutputStream(socket.getOutputStream());
+				out.flush();
+	
+				inp = new ObjectInputStream(socket.getInputStream());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	
+		public Socket getSocket() {
+			return socket;
+		}
+	
+		public void sendMessage(String message) {
+			try {
+				if (message.equalsIgnoreCase("QUIT")) {
+					socket.close();
+					return;
+				} else {
+					out.writeObject(message);
+					out.flush();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		public void broadcastMessage(String message) {
+			for (EchoThread connection : connectionPool) {
+				connection.sendMessage(message);
+			}
+		}
+	
+		public String buildMessage(String message) {
+			return this.identifier + ": " + message;
+		}
+	
+		public void run() {
+			try {
+				// first line will be the username in our protocol
+				this.identifier = (String) inp.readObject();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return;
+			}
+	
+			System.out.println(this.identifier + " has connected");
+			String line;
+	
+			while (socket.isConnected()) {
+				try {
+					line = (String) inp.readObject();
+					String message = buildMessage(line);
+					broadcastMessage(message);
+				} catch (Exception e) { // TODO better handling
+					System.out.println(this.identifier + " has disconnected");
+					return;
+				}
+			}
 		}
 	}
-
-	private void ableToType(final boolean ableToType) {
-		SwingUtilities.invokeLater( // basically we update the GUI to be able to type in a message 
-				new Runnable() { 
-					public void run() {
-						userText.setEditable(ableToType);
-					}
-				});
-	}
-
-	private void showMessage(final String text) {
-		SwingUtilities.invokeLater( // thread that updates the GUI
-				new Runnable() { // create thread
-					public void run() {
-						chatWindow.append(text);
-					}
-				});
-	}
-
 }
